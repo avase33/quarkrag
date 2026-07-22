@@ -1,0 +1,19 @@
+# Java / Maven / Quarkus
+target/
+*.class
+*.jar
+.quarkus/
+build-output.txt
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# Env / editors / OS
+.env
+.env.local
+.DS_Store
+.idea/
+.vscode/
+*.iml

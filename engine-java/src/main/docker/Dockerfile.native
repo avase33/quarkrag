@@ -1,0 +1,23 @@
+# Native build — compiles to a standalone binary with GraalVM.
+#
+# Startup drops from a few hundred milliseconds to a few milliseconds, and
+# resident memory from ~120 MB to ~30 MB. That is what makes this deployable as
+# a scale-to-zero serverless function or a dense Kubernetes pod.
+#
+# Build takes several minutes and needs ~4 GB of RAM:
+#   docker build -f src/main/docker/Dockerfile.native -t quarkrag:native .
+
+FROM quay.io/quarkus/ubi-quarkus-mandrel-builder-image:23.1-jdk-21 AS build
+USER root
+WORKDIR /app
+COPY --chown=quarkus:quarkus pom.xml ./
+COPY --chown=quarkus:quarkus src ./src
+RUN ./mvnw -B package -Dnative -DskipTests || mvn -B package -Dnative -DskipTests
+
+FROM quay.io/quarkus/quarkus-micro-image:2.0
+WORKDIR /work/
+COPY --from=build /app/target/*-runner /work/application
+RUN chmod 775 /work
+EXPOSE 8080
+USER 1001
+ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]

@@ -1,0 +1,33 @@
+services:
+  engine:
+    build:
+      context: ./engine-java
+      dockerfile: src/main/docker/Dockerfile.jvm
+    environment:
+      # switch to pgvector by setting these three:
+      QUARKRAG_STORE: memory
+      # QUARKRAG_STORE: pgvector
+      # QUARKRAG_PG_URL: jdbc:postgresql://postgres:5432/quarkrag
+      QUARKRAG_LLM: extractive
+    ports:
+      - "8080:8080"
+
+  chat:
+    build: ./chat-ts
+    environment:
+      NEXT_PUBLIC_ENGINE_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - engine
+
+  # Optional: docker compose --profile infra up
+  postgres:
+    image: pgvector/pgvector:pg16
+    profiles: ["infra"]
+    environment:
+      POSTGRES_DB: quarkrag
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
